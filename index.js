@@ -21,7 +21,8 @@ const transaccion = async (
   monto,
   cuentaOrigen,
   cuentaDestino,
-  descripcion
+  descripcion,
+  client
 ) => {
   const consulta = {
     text: "INSERT INTO transacciones values ($1, $2, $3, $4) RETURNING*;",
@@ -36,17 +37,28 @@ const transaccion = async (
     values: [monto, cuentaDestino],
   };
   try {
-    await pool.query("BEGIN");
-    const desc = await pool.query(descuento);
-    const query = await pool.query(consulta);
-    const deposito = await pool.query(acreditacion);
-    await pool.query("COMMIT");
+    await client.query("BEGIN");
+    const desc = await client.query(descuento);
+    const query = await client.query(consulta);
+    const deposito = await client.query(acreditacion);
+    await client.query("COMMIT");
   } catch (e) {
     console.log(e);
-    await pool.query("ROLLBACK");
+    await client.query("ROLLBACK");
   }
 };
 
-if (comando == "transaccion") {
-  transaccion([fecha, monto, cuentaOrigen, cuentaDestino, descripcion]);
-}
+pool.connect(async (err, client, release) => {
+  if (comando == "transaccion") {
+    await transaccion(
+      fecha,
+      monto,
+      cuentaOrigen,
+      cuentaDestino,
+      descripcion,
+      client
+    );
+  }
+  release();
+  pool.end();
+});
