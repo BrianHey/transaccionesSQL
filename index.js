@@ -5,7 +5,7 @@ const pool = new Pool({
   host: "localhost",
   password: "postgres",
   port: 5432,
-  database: "banco",
+  database: "bank",
 });
 
 const arg = process.argv.slice(2);
@@ -17,11 +17,11 @@ const cuentaDestino = arg[4];
 const descripcion = arg[5];
 
 const transaccion = async (
-  descripcion,
   fecha,
   monto,
   cuentaOrigen,
-  cuentaDestino
+  cuentaDestino,
+  descripcion
 ) => {
   const consulta = {
     text: "INSERT INTO transacciones values ($1, $2, $3, $4) RETURNING*;",
@@ -36,7 +36,6 @@ const transaccion = async (
     values: [monto, cuentaDestino],
   };
   try {
-    console.log("TRY");
     await pool.query("BEGIN");
     const desc = await pool.query(descuento);
     const query = await pool.query(consulta);
@@ -49,5 +48,5 @@ const transaccion = async (
 };
 
 if (comando == "transaccion") {
-  transaccion(descripcion, fecha, monto, cuentaOrigen, cuentaDestino);
+  transaccion([fecha, monto, cuentaOrigen, cuentaDestino, descripcion]);
 }
